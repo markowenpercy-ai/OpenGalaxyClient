@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0a0a12;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.glow-box {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.input-field {
+  @apply w-full px-4 py-3 bg-space-panel border border-space-border rounded-lg
+         text-white placeholder-gray-500 focus:outline-none focus:border-space-accent
+         focus:ring-1 focus:ring-space-accent transition-colors;
+}
+
+.btn-primary {
+  @apply w-full py-3 bg-space-accent text-space-dark font-semibold rounded-lg
+         hover:bg-space-accent-dim transition-colors disabled:opacity-50;
+}

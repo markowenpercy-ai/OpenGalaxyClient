@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenGalaxy Admin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+.header { background: #111; border-bottom: 1px solid #00ff44; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+.header h1 { color: #00ffcc; font-size: 20px; }
+.header h1 span { color: #555; font-weight: normal; font-size: 13px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-right .badge { font-size: 11px; padding: 4px 10px; border-radius: 4px; }
+.online-badge { background: #003300; color: #00ff44; border: 1px solid #00ff44; }
+.offline-badge { background: #330000; color: #ff4444; border: 1px solid #ff4444; }
+.container { display: flex; min-height: calc(100vh - 52px); }
+.sidebar { width: 200px; background: #111; border-right: 1px solid #222; padding: 12px 0; flex-shrink: 0; }
+.sidebar a { display: block; padding: 10px 20px; color: #888; text-decoration: none; font-size: 13px; border-left: 3px solid transparent; cursor: pointer; }
+.sidebar a:hover { color: #fff; background: #1a1a1a; }
+.sidebar a.active { color: #00ffcc; border-left-color: #00ffcc; background: #0a1a0a; }
+.content { flex: 1; padding: 24px; overflow-y: auto; max-height: calc(100vh - 52px); }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.card h3 { color: #00ffcc; font-size: 15px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #222; }
+.card h4 { color: #aaa; font-size: 13px; margin: 12px 0 6px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.stat-box { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 14px; text-align: center; }
+.stat-box .val { font-size: 24px; font-weight: bold; color: #00ff44; }
+.stat-box .lbl { font-size: 11px; color: #666; margin-top: 4px; }
+label { display: block; color: #888; font-size: 12px; margin: 8px 0 3px; }
+input, select, textarea { width: 100%; padding: 8px 10px; background: #000; border: 1px solid #333; color: #0f0; border-radius: 4px; font-size: 13px; font-family: inherit; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #00ff44; }
+textarea { min-height: 60px; resize: vertical; font-family: monospace; }
+.btn { padding: 8px 18px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: 600; }
+.btn-primary { background: #00ff44; color: #000; }
+.btn-primary:hover { background: #00dd33; }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+.btn-danger { background: #440000; color: #f44; border: 1px solid #f44; }
+.btn-danger:hover { background: #660000; }
+.btn-secondary { background: #222; color: #aaa; border: 1px solid #444; }
+.btn-secondary:hover { background: #333; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.form-row { display: flex; gap: 12px; }
+.form-row > * { flex: 1; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #222; }
+th { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { color: #ccc; font-family: monospace; font-size: 12px; }
+tr:hover td { background: #1a1a1a; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.status-dot.green { background: #00ff44; }
+.status-dot.red { background: #f44; }
+.status-dot.yellow { background: #ff0; }
+.log-box { background: #000; border: 1px solid #222; border-radius: 4px; padding: 12px; font-family: monospace; font-size: 11px; color: #888; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+.log-box .info { color: #0a0; }
+.log-box .warn { color: #ff0; }
+.log-box .error { color: #f44; }
+.log-line { padding: 1px 0; }
+.api-response { background: #000; border: 1px solid #333; border-radius: 4px; padding: 12px; font-family: monospace; font-size: 12px; color: #0f0; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 6px; font-size: 13px; z-index: 999; animation: fadein 0.3s; }
+.toast.success { background: #003300; color: #00ff44; border: 1px solid #00ff44; }
+.toast.error { background: #330000; color: #ff4444; border: 1px solid #ff4444; }
+.toast.info { background: #003366; color: #44ccff; border: 1px solid #44ccff; }
+@keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.copy-btn { cursor: pointer; color: #555; font-size: 11px; margin-left: 6px; }
+.copy-btn:hover { color: #0f0; }
+.mb-8 { margin-bottom: 8px; }
+.mt-8 { margin-top: 8px; }
+.hidden { display: none !important; }
+.text-mono { font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OpenGalaxy <span>Admin Dashboard</span></h1>
+  <div class="header-right">
+    <span class="badge online-badge" id="status-badge">● Checking...</span>
+    <span id="header-user" style="color:#555;font-size:12px">Not logged in</span>
+    <button class="btn btn-secondary btn-sm" id="header-login-btn" onclick="showSection('auth')">Login</button>
+    <button class="btn btn-danger btn-sm hidden" id="header-logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="sidebar">
+    <a class="active" onclick="showSection('status')" data-section="status">📊 Status</a>
+    <a onclick="showSection('accounts')" data-section="accounts">👥 Accounts</a>
+    <a onclick="showSection('api')" data-section="api">🔌 API Console</a>
+    <a onclick="showSection('commands')" data-section="commands">📖 Commands</a>
+    <a onclick="showSection('logs')" data-section="logs">📋 Logs</a>
+  </div>
+
+  <div class="content">
+
+    <!-- STATUS -->
+    <div class="section active" id="section-status">
+      <div class="card">
+        <h3>Server Status</h3>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="val" id="stat-online">-</div><div class="lbl">Online Players</div></div>
+          <div class="stat-box"><div class="val" id="stat-backend" style="color:#f44">●</div><div class="lbl">Backend (9090)</div></div>
+          <div class="stat-box"><div class="val" id="stat-proxy" style="color:#f44">●</div><div class="lbl">Proxy (8080)</div></div>
+          <div class="stat-box"><div class="val" id="stat-game" style="color:#f44">●</div><div class="lbl">Game (5050/5150)</div></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="refreshStatus()">⟳ Refresh</button>
+          <button class="btn btn-sm" style="background:#003300;color:#0f0;border:1px solid #0f0" onclick="testBackend()">Test Backend</button>
+        </div>
+        <div id="status-detail" class="mt-8 text-mono" style="color:#555"></div>
+      </div>
+
+      <div class="card">
+        <h3>System Info</h3>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="val" style="font-size:16px" id="sys-patch">-</div><div class="lbl">Patch Version</div></div>
+          <div class="stat-box"><div class="val" style="font-size:16px" id="sys-cdn">-</div><div class="lbl">CDN URL</div></div>
+          <div class="stat-box"><div class="val" style="font-size:16px" id="sys-ip">-</div><div class="lbl">Game IP</div></div>
+          <div class="stat-box"><div class="val" style="font-size:16px;color:#ff0" id="sys-uptime">-</div><div class="lbl">Session Started</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="section" id="section-accounts">
+      <div class="card">
+        <h3>Account Manager</h3>
+        <div class="form-row mb-8">
+          <input type="text" id="acct-login-user" placeholder="Username">
+          <input type="password" id="acct-login-pass" placeholder="Password">
+          <button class="btn btn-primary" onclick="adminLogin()">Login</button>
+        </div>
+        <div id="acct-auth-status" style="font-size:12px;color:#666"></div>
+      </div>
+
+      <div class="card hidden" id="acct-list-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0;border:none;padding:0">Accounts</h3>
+          <button class="btn btn-primary btn-sm" onclick="toggleCreateForm()">+ New</button>
+        </div>
+        <div id="create-acct-form" class="hidden mt-8" style="background:#111;padding:12px;border-radius:4px;border:1px solid #333">
+          <div class="form-row">
+            <input type="text" id="new-acct-name" placeholder="Username">
+            <input type="password" id="new-acct-pass" placeholder="Password">
+            <button class="btn btn-primary btn-sm" onclick="createAccount()">Create</button>
+          </div>
+        </div>
+        <div class="table-wrap mt-8">
+          <table>
+            <thead><tr><th>ID</th><th>Username</th><th>User ID</th><th>Actions</th></tr></thead>
+            <tbody id="acct-table-body"><tr><td colspan="4" style="color:#555;text-align:center">No accounts loaded</td></tr></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-sm mt-8" onclick="listAccounts()">⟳ Refresh List</button>
+      </div>
+    </div>
+
+    <!-- API CONSOLE -->
+    <div class="section" id="section-api">
+      <div class="card">
+        <h3>API Console</h3>
+        <label>Endpoint</label>
+        <select id="api-endpoint" onchange="updateApiFields()">
+          <option value="/api/status">GET /api/status</option>
+          <option value="/api/login">POST /api/login</option>
+          <option value="/api/register">POST /api/register</option>
+          <option value="/api/play-user">POST /api/play-user</option>
+          <option value="/api/logout">GET /api/logout</option>
+          <option value="/api/accounts/list/user">GET /api/accounts/list/user</option>
+          <option value="/api/accounts/create/user">POST /api/accounts/create/user</option>
+          <option value="/backend/login/login/account">POST /backend/login/login/account</option>
+          <option value="/backend/login/register/account">POST /backend/login/register/account</option>
+          <option value="/backend/account/list/user">GET /backend/account/list/user</option>
+          <option value="/backend/account/create/user">POST /backend/account/create/user</option>
+          <option value="/backend/account/play/user/0">GET /backend/account/play/user/{id}</option>
+          <option value="/backend/account/logout/user">GET /backend/account/logout/user</option>
+          <option value="/backend/metrics/online">GET /backend/metrics/online</option>
+          <option value="/backend/metrics/patch">GET /backend/metrics/patch</option>
+        </select>
+        <div id="api-body-section">
+          <label>Request Body (JSON)</label>
+          <textarea id="api-body" placeholder='{"key": "value"}'></textarea>
+        </div>
+        <div class="form-row">
+          <div style="flex:3"><label>Auth Token</label><input type="text" id="api-token" placeholder="Paste auth token"></div>
+          <div style="flex:1"><label>Method</label><input type="text" id="api-method" value="GET" readonly style="color:#888"></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="executeApi()">▶ Execute</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('api-result').textContent=''">Clear</button>
+        </div>
+        <div id="api-result" class="api-response mt-8">Response will appear here</div>
+      </div>
+    </div>
+
+    <!-- COMMANDS -->
+    <div class="section" id="section-commands">
+      <div class="card" style="border-color:#00ff44">
+        <h3>Quick Actions <span style="color:#555;font-size:11px">(executed via REST API)</span></h3>
+        <div id="quick-action-result" class="api-response" style="max-height:100px;margin-bottom:10px">Ready</div>
+
+        <h4>Change Password</h4>
+        <div class="form-row">
+          <input type="text" id="qa-cp-user" placeholder="Username">
+          <input type="password" id="qa-cp-pass" placeholder="New password">
+          <button class="btn btn-primary btn-sm" onclick="qaChangePassword()">Change</button>
+        </div>
+
+        <h4>Create User / Planet</h4>
+        <div class="form-row">
+          <input type="text" id="qa-cu-name" placeholder="Planet name">
+          <input type="password" id="qa-cu-pass" placeholder="Password">
+          <button class="btn btn-primary btn-sm" onclick="qaCreateUser()">Create</button>
+        </div>
+
+        <h4>Get Play Session</h4>
+        <div class="form-row">
+          <input type="text" id="qa-ps-uid" placeholder="User ID">
+          <button class="btn btn-primary btn-sm" onclick="qaPlayUser()">Get Key</button>
+        </div>
+
+        <h4>Server Metrics</h4>
+        <div class="btn-group" style="margin-top:4px">
+          <button class="btn btn-secondary btn-sm" onclick="qaOnline()">Online Players</button>
+          <button class="btn btn-secondary btn-sm" onclick="qaPatch()">Patch Info</button>
+          <button class="btn btn-secondary btn-sm" onclick="qaListUsers()">List Users</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>In-Game Command Executor</h3>
+        <div style="display:flex;gap:8px;align-items:end;margin-bottom:10px">
+          <div style="flex:1">
+            <label style="margin:0">Your Auth Token</label>
+            <input type="text" id="cmd-auth-token" placeholder="Auth token from Accounts > Login">
+          </div>
+          <div style="flex:1">
+            <label style="margin:0">User ID</label>
+            <input type="number" id="cmd-user-id" value="1" style="width:100px">
+          </div>
+          <div style="flex:1">
+            <label style="margin:0">Planet GUID</label>
+            <input type="number" id="cmd-guid" value="1" style="width:100px">
+          </div>
+        </div>
+        <div style="background:#000;border:1px solid #333;border-radius:4px;padding:10px;font-family:monospace;font-size:13px;color:#0f0;margin-bottom:8px" id="cmd-preview">/ command preview</div>
+        <div class="btn-group" style="margin-bottom:12px">
+          <button class="btn btn-primary" onclick="executeCommand()" id="cmd-exec-btn">▶ Execute Now</button>
+          <button class="btn btn-secondary" onclick="copyCommand()">📋 Copy</button>
+        </div>
+        <div id="cmd-result" class="api-response" style="max-height:100px;margin-bottom:10px">Ready</div>
+
+        <div class="form-row">
+          <select id="cmd-select" onchange="updateCommandForm()">
+            <option value="">-- Select a command --</option>
+            <optgroup label="Admin">
+              <option value="give">/give &lt;guid&gt; &lt;propId&gt; &lt;amount&gt;</option>
+              <option value="giveuser">/giveuser &lt;guid&gt; &lt;propId&gt; &lt;amount&gt;</option>
+              <option value="broadcast">/broadcast &lt;message&gt;</option>
+              <option value="restart">/restart</option>
+              <option value="maintenance">/maintenance [delay_seconds]</option>
+              <option value="delete">/delete &lt;username&gt;</option>
+              <option value="ban">/ban &lt;guid&gt; &lt;reason&gt;</option>
+              <option value="tempban">/tempban &lt;guid&gt; &lt;duration_m&gt; &lt;reason&gt;</option>
+              <option value="unban">/unban &lt;guid&gt;</option>
+              <option value="mute">/mute &lt;guid&gt;</option>
+              <option value="warn">/warn &lt;guid&gt; &lt;reason&gt;</option>
+              <option value="changerank">/changerank &lt;guid&gt; &lt;rank&gt;</option>
+              <option value="changepassword">/changepassword &lt;guid&gt; &lt;password&gt;</option>
+              <option value="changenickname">/changenickname &lt;guid&gt; &lt;name&gt;</option>
+              <option value="givemail">/givemail &lt;guid&gt; &lt;subject&gt; &lt;body&gt;</option>
+              <option value="reset">/reset &lt;guid&gt;</option>
+              <option value="spy">/spy</option>
+              <option value="feature">/feature &lt;name&gt; &lt;on|off&gt;</option>
+            </optgroup>
+            <optgroup label="Player">
+              <option value="resources">/resources</option>
+              <option value="mp">/mp</option>
+              <option value="get">/get &lt;item_name&gt;</option>
+              <option value="blueprints">/blueprints</option>
+              <option value="information">/information</option>
+              <option value="status">/status</option>
+              <option value="performance">/performance</option>
+              <option value="userinfo">/userinfo &lt;guid&gt;</option>
+              <option value="turnpeace">/turnpeace</option>
+              <option value="notdisturb">/notdisturb</option>
+              <option value="block">/block &lt;guid&gt;</option>
+              <option value="blacklist">/blacklist</option>
+              <option value="giftmp">/giftmp &lt;guid&gt; &lt;amount&gt;</option>
+              <option value="findmatch">/findmatch</option>
+            </optgroup>
+            <optgroup label="Fleet / Combat">
+              <option value="savepreset">/savepreset &lt;name&gt;</option>
+              <option value="loadpreset">/loadpreset &lt;name&gt;</option>
+              <option value="listpresets">/listpresets</option>
+              <option value="deletepreset">/deletepreset &lt;name&gt;</option>
+              <option value="dismissall">/dismissall</option>
+              <option value="pausematch">/pausematch</option>
+              <option value="unpausematch">/unpausematch</option>
+              <option value="stopmatch">/stopmatch</option>
+            </optgroup>
+            <optgroup label="Cheat / Max">
+              <option value="maxcommanders">/maxcommanders</option>
+              <option value="maxscience">/maxscience</option>
+              <option value="maxbuildings">/maxbuildings</option>
+              <option value="setcommanderades">/setcommanderades &lt;guid&gt; &lt;a&gt; &lt;d&gt; &lt;e&gt; &lt;s&gt;</option>
+              <option value="setcommandervariance">/setcommandervariance &lt;guid&gt; &lt;variance&gt;</option>
+            </optgroup>
+          </select>
+        </div>
+        <div id="cmd-fields" style="margin-top:10px"></div>
+      </div>
+
+      <div class="card">
+        <h3>Game TCP Socket Ports</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Port</th><th>Protocol</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>5050</td><td>TCP</td><td>Game proxy (handles Flash security policy)</td></tr>
+              <tr><td>5051</td><td>TCP</td><td>Game server (main game protocol)</td></tr>
+              <tr><td>5150</td><td>TCP</td><td>Game login server</td></tr>
+              <tr><td>8080</td><td>HTTP</td><td>Proxy server (admin/client UI)</td></tr>
+              <tr><td>9090</td><td>HTTP</td><td>Backend REST API (Spring Boot)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="section" id="section-logs">
+      <div class="card">
+        <h3>Log Viewer</h3>
+        <div class="form-row">
+          <select id="log-source">
+            <option value="backend">Backend</option>
+            <option value="proxy">Proxy</option>
+            <option value="gameproxy">Game Proxy</option>
+            <option value="startup">Startup Log</option>
+          </select>
+          <input type="number" id="log-lines" value="50" min="10" max="500" style="width:80px" placeholder="Lines">
+          <button class="btn btn-primary" onclick="fetchLogs()">⟳ Fetch</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('log-display').innerHTML=''">Clear</button>
+        </div>
+        <div id="log-display" class="log-box mt-8">Select a log source and click Fetch</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+var AUTH_TOKEN = '';
+var REFRESH_INTERVAL = null;
+
+function toast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(function(){ t.remove(); }, 4000);
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.sidebar a').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelector('.sidebar a[data-section="' + name + '"]').classList.add('active');
+}
+
+function showErr(el, msg) { el.textContent = msg; el.style.color = '#f44'; }
+function showOk(el, msg) { el.textContent = msg; el.style.color = '#0f0'; }
+
+function api(method, path, body, token, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, path, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  if (token) xhr.setRequestHeader('Authorization', token);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      var data;
+      try { data = JSON.parse(xhr.responseText); } catch(e) { data = xhr.responseText; }
+      cb(data, xhr.status);
+    }
+  };
+  xhr.send(body ? JSON.stringify(body) : null);
+}
+
+function refreshStatus() {
+  api('GET', '/api/status', null, null, function(data) {
+    if (data && data.onlinePlayers !== undefined) {
+      document.getElementById('stat-online').textContent = data.onlinePlayers;
+      document.getElementById('sys-patch').textContent = data.patch || '-';
+      document.getElementById('sys-cdn').textContent = data.cdnUrl || '-';
+      document.getElementById('sys-ip').textContent = data.gameIp || '-';
+      document.getElementById('status-badge').className = 'badge online-badge';
+      document.getElementById('status-badge').textContent = '● Online';
+    }
+  });
+
+  testBackend();
+}
+
+function testBackend() {
+  var b = document.getElementById('stat-backend');
+  var p = document.getElementById('stat-proxy');
+  var g = document.getElementById('stat-game');
+
+  var be = new XMLHttpRequest();
+  be.open('GET', '/api/status', true);
+  be.onreadystatechange = function() {
+    if (be.readyState == 4) {
+      b.style.color = be.status == 200 ? '#0f0' : '#f44';
+      b.textContent = be.status == 200 ? '●' : '●';
+    }
+  };
+  be.send();
+}
+
+function testPort(port, el) {
+  api('GET', '/api/status', null, null, function(data, status) {
+    el.style.color = '#0f0';
+    el.textContent = '●';
+  });
+}
+
+function updateUiForAuth() {
+  var loginBtn = document.getElementById('header-login-btn');
+  var logoutBtn = document.getElementById('header-logout-btn');
+  var userEl = document.getElementById('header-user');
+  if (AUTH_TOKEN) {
+    loginBtn.classList.add('hidden');
+    logoutBtn.classList.remove('hidden');
+    userEl.textContent = 'Authenticated';
+  } else {
+    loginBtn.classList.remove('hidden');
+    logoutBtn.classList.add('hidden');
+    userEl.textContent = 'Not logged in';
+  }
+}
+
+function adminLogin() {
+  var user = document.getElementById('acct-login-user').value.trim();
+  var pass = document.getElementById('acct-login-pass').value;
+  if (!user || !pass) { toast('Enter username and password', 'error'); return; }
+
+  api('POST', '/backend/login/login/account', {username: user, password: pass}, null, function(data) {
+    if (data && data.code == 200 && data.data && data.data.token) {
+      AUTH_TOKEN = data.data.token;
+      document.getElementById('api-token').value = AUTH_TOKEN;
+      updateUiForAuth();
+      document.getElementById('acct-auth-status').textContent = 'Logged in as ' + user;
+      document.getElementById('acct-auth-status').style.color = '#0f0';
+      document.getElementById('acct-list-card').classList.remove('hidden');
+      toast('Authenticated successfully', 'success');
+      listAccounts();
+    } else {
+      showErr(document.getElementById('acct-auth-status'), data.message || 'Login failed');
+      toast('Login failed', 'error');
+    }
+  });
+}
+
+function doLogout() {
+  if (AUTH_TOKEN) {
+    api('GET', '/backend/account/logout/user', null, AUTH_TOKEN, function() {});
+  }
+  AUTH_TOKEN = '';
+  document.getElementById('api-token').value = '';
+  updateUiForAuth();
+  document.getElementById('acct-auth-status').textContent = '';
+  document.getElementById('acct-list-card').classList.add('hidden');
+  document.getElementById('acct-table-body').innerHTML = '<tr><td colspan="4" style="color:#555;text-align:center">Logged out</td></tr>';
+  toast('Logged out', 'info');
+}
+
+function listAccounts() {
+  if (!AUTH_TOKEN) { toast('Login first', 'error'); return; }
+  api('GET', '/backend/account/list/user', null, AUTH_TOKEN, function(data) {
+    var tbody = document.getElementById('acct-table-body');
+    if (data && data.code == 200 && Array.isArray(data.data)) {
+      if (data.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#555;text-align:center">No accounts found</td></tr>';
+      } else {
+        tbody.innerHTML = data.data.map(function(a) {
+          var uid = a.userId || a.id || '-';
+          return '<tr><td style="color:#666">' + (a._id || '-') + '</td><td>' + (a.username || '-') + '</td><td>' + uid + '</td><td><button class="btn btn-secondary btn-sm" onclick="playUser(\'' + uid + '\')">Play</button></td></tr>';
+        }).join('');
+      }
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:#f44;text-align:center">Failed to load: ' + ((data && data.message) || 'unknown') + '</td></tr>';
+    }
+  });
+}
+
+function playUser(uid) {
+  if (!AUTH_TOKEN) { toast('Login first', 'error'); return; }
+  api('GET', '/backend/account/play/user/' + uid, null, AUTH_TOKEN, function(data) {
+    if (data && data.code == 200 && data.data) {
+      toast('Session key: ' + (data.data.sessionKey || '').substring(0, 20) + '...', 'success');
+    } else {
+      toast('Failed: ' + ((data && data.message) || 'error'), 'error');
+    }
+  });
+}
+
+function toggleCreateForm() {
+  var f = document.getElementById('create-acct-form');
+  f.classList.toggle('hidden');
+}
+
+function createAccount() {
+  var name = document.getElementById('new-acct-name').value.trim();
+  var pass = document.getElementById('new-acct-pass').value.trim();
+  if (!name || !pass) { toast('Enter name and password', 'error'); return; }
+  if (!AUTH_TOKEN) { toast('Login first', 'error'); return; }
+
+  api('POST', '/backend/account/create/user', {username: name, password: pass}, AUTH_TOKEN, function(data) {
+    if (data && data.code == 200) {
+      toast('Account created: ' + name, 'success');
+      document.getElementById('new-acct-name').value = '';
+      document.getElementById('new-acct-pass').value = '';
+      document.getElementById('create-acct-form').classList.add('hidden');
+      listAccounts();
+    } else {
+      toast('Failed: ' + ((data && data.message) || 'error'), 'error');
+    }
+  });
+}
+
+function updateApiFields() {
+  var sel = document.getElementById('api-endpoint');
+  var path = sel.value;
+  var bodySec = document.getElementById('api-body-section');
+  var methodEl = document.getElementById('api-method');
+
+  if (path.startsWith('/backend/')) {
+    methodEl.value = path.includes('/login/') ? 'POST' : path.includes('/create/') ? 'POST' : 'GET';
+  } else {
+    methodEl.value = path.includes('login') || path.includes('register') || path.includes('play-user') || path.includes('create') ? 'POST' : 'GET';
+  }
+
+  var needsBody = methodEl.value === 'POST';
+  bodySec.style.display = needsBody ? 'block' : 'none';
+
+  var suggestions = {
+    '/api/login': '{"username": "testplayer", "password": "test123"}',
+    '/api/register': '{"email": "new@test.com", "username": "newuser", "password": "newpass", "captcha": "x"}',
+    '/api/play-user': '{"userId": "0"}',
+    '/api/accounts/create/user': '{"username": "newuser", "password": "newpass"}',
+    '/backend/login/login/account': '{"username": "testplayer", "password": "test123"}',
+    '/backend/login/register/account': '{"email": "new@test.com", "username": "newuser", "password": "newpass", "captcha": "x"}',
+    '/backend/account/create/user': '{"username": "newuser", "password": "newpass", "ground": 1}'
+  };
+
+  if (needsBody) {
+    document.getElementById('api-body').value = suggestions[path] || '{\n  \n}';
+  }
+}
+
+function executeApi() {
+  var path = document.getElementById('api-endpoint').value;
+  var method = document.getElementById('api-method').value;
+  var token = document.getElementById('api-token').value.trim();
+  var bodyStr = document.getElementById('api-body').value.trim();
+  var body = null;
+
+  if (method === 'POST' && bodyStr) {
+    try { body = JSON.parse(bodyStr); } catch(e) {
+      document.getElementById('api-result').textContent = 'ERROR: Invalid JSON:\n' + bodyStr;
+      return;
+    }
+  }
+
+  var resultEl = document.getElementById('api-result');
+  resultEl.textContent = 'Requesting ' + method + ' ' + path + '...';
+  resultEl.style.color = '#888';
+
+  var ts = new Date().toISOString();
+
+  api(method, path, body, token, function(data, status) {
+    resultEl.textContent = '> ' + method + ' ' + path + '\n> Auth: ' + (token ? 'Bearer ' + token.substring(0, 20) + '...' : 'none') + '\n> Time: ' + ts + '\n> Status: ' + status + '\n\n' + JSON.stringify(data, null, 2);
+    resultEl.style.color = status < 400 ? '#0f0' : '#f44';
+  });
+}
+
+function fetchLogs() {
+  var source = document.getElementById('log-source').value;
+  var lines = document.getElementById('log-lines').value || 50;
+  var display = document.getElementById('log-display');
+  display.innerHTML = '<div class="log-line">Fetching ' + source + ' log...</div>';
+
+  var logPaths = {
+    backend: '/logs/backend.log',
+    proxy: '/logs/proxy.log',
+    gameproxy: '/logs/gameproxy.log',
+    startup: '/logs/startup.log'
+  };
+
+  var path = logPaths[source];
+  if (!path) { display.innerHTML = '<div class="log-line error">Unknown log source</div>'; return; }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', path + '?t=' + Date.now(), true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 200 || xhr.status == 0) {
+        var text = xhr.responseText || '';
+        var allLines = text.split('\n').filter(function(l) { return l.trim(); });
+        var lastLines = allLines.slice(-lines);
+        display.innerHTML = lastLines.map(function(l) {
+          var cls = '';
+          if (l.includes('ERROR') || l.includes('Exception') || l.includes('Error')) cls = 'error';
+          else if (l.includes('WARN')) cls = 'warn';
+          else if (l.includes('INFO')) cls = 'info';
+          return '<div class="log-line ' + cls + '">' + escapeHtml(l) + '</div>';
+        }).join('') || '<div class="log-line" style="color:#555">Empty log</div>';
+        display.scrollTop = display.scrollHeight;
+      } else {
+        display.innerHTML = '<div class="log-line error">Failed to fetch log (status ' + xhr.status + '). Logs may not be available via HTTP.</div>';
+      }
+    }
+  };
+  xhr.send();
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function qaResult(msg, isErr) {
+  var el = document.getElementById('quick-action-result');
+  el.textContent = msg;
+  el.style.color = isErr ? '#f44' : '#0f0';
+}
+
+function qaChangePassword() {
+  var user = document.getElementById('qa-cp-user').value.trim();
+  var pass = document.getElementById('qa-cp-pass').value.trim();
+  if (!user || !pass) { qaResult('Enter username and new password', true); return; }
+  api('POST', '/backend/account/changepassword/user', {username: user, password: pass}, AUTH_TOKEN, function(data) {
+    qaResult(data.code == 200 ? 'Password changed for ' + user : (data.message || 'Failed'), data.code != 200);
+  });
+}
+
+function qaCreateUser() {
+  var name = document.getElementById('qa-cu-name').value.trim();
+  var pass = document.getElementById('qa-cu-pass').value.trim();
+  if (!name || !pass) { qaResult('Enter name and password', true); return; }
+  api('POST', '/backend/account/create/user', {username: name, password: pass, ground: 1}, AUTH_TOKEN, function(data) {
+    qaResult(data.code == 200 ? 'Created: ' + name : (data.message || 'Failed'), data.code != 200);
+  });
+}
+
+function qaPlayUser() {
+  var uid = document.getElementById('qa-ps-uid').value.trim();
+  if (!uid) { qaResult('Enter a User ID', true); return; }
+  api('GET', '/backend/account/play/user/' + uid, null, AUTH_TOKEN, function(data) {
+    qaResult(data.code == 200 ? 'Session key: ' + (data.data && data.data.sessionKey ? data.data.sessionKey.substring(0, 30) + '...' : 'ok') : (data.message || 'Failed'), data.code != 200);
+  });
+}
+
+function qaOnline() {
+  api('GET', '/backend/metrics/online', null, AUTH_TOKEN, function(data) {
+    qaResult('Online players: ' + ((data.data && data.data.online) || '?'), false);
+  });
+}
+
+function qaPatch() {
+  api('GET', '/backend/metrics/patch', null, AUTH_TOKEN, function(data) {
+    qaResult('Patch: ' + JSON.stringify(data.data || data), false);
+  });
+}
+
+function qaListUsers() {
+  if (!AUTH_TOKEN) { qaResult('Login first', true); return; }
+  api('GET', '/backend/account/list/user', null, AUTH_TOKEN, function(data) {
+    if (data.code == 200 && Array.isArray(data.data)) {
+      qaResult(data.data.length + ' users: ' + data.data.map(function(u){return u.username;}).join(', '), false);
+    } else {
+      qaResult((data.message || 'Failed to list'), true);
+    }
+  });
+}
+
+var CMD_TEMPLATES = {
+  give: {args: [{id:'guid',label:'GUID'},{id:'propId',label:'Prop ID'},{id:'amount',label:'Amount'}], cmd:'/give'},
+  giveuser: {args: [{id:'guid',label:'GUID'},{id:'propId',label:'Prop ID'},{id:'amount',label:'Amount'}], cmd:'/giveuser'},
+  broadcast: {args: [{id:'msg',label:'Message'}], cmd:'/broadcast'},
+  restart: {args: [], cmd:'/restart'},
+  maintenance: {args: [{id:'delay',label:'Delay (seconds)',opt:true}], cmd:'/maintenance'},
+  delete: {args: [{id:'username',label:'Username'}], cmd:'/delete'},
+  ban: {args: [{id:'guid',label:'GUID'},{id:'reason',label:'Reason'}], cmd:'/ban'},
+  tempban: {args: [{id:'guid',label:'GUID'},{id:'duration',label:'Duration (min)'},{id:'reason',label:'Reason'}], cmd:'/tempban'},
+  unban: {args: [{id:'guid',label:'GUID'}], cmd:'/unban'},
+  mute: {args: [{id:'guid',label:'GUID'}], cmd:'/mute'},
+  warn: {args: [{id:'guid',label:'GUID'},{id:'reason',label:'Reason'}], cmd:'/warn'},
+  changerank: {args: [{id:'guid',label:'GUID'},{id:'rank',label:'Rank (ADMIN/GM/USER)'}], cmd:'/changerank'},
+  changepassword: {args: [{id:'guid',label:'GUID'},{id:'pw',label:'New password'}], cmd:'/changepassword'},
+  changenickname: {args: [{id:'guid',label:'GUID'},{id:'name',label:'New name'}], cmd:'/changenickname'},
+  givemail: {args: [{id:'guid',label:'GUID'},{id:'subj',label:'Subject'},{id:'body',label:'Body'}], cmd:'/givemail'},
+  reset: {args: [{id:'guid',label:'GUID'}], cmd:'/reset'},
+  spy: {args: [], cmd:'/spy'},
+  feature: {args: [{id:'name',label:'Feature name'},{id:'val',label:'on/off'}], cmd:'/feature'},
+  resources: {args: [], cmd:'/resources'},
+  mp: {args: [], cmd:'/mp'},
+  get: {args: [{id:'item',label:'Item name'}], cmd:'/get'},
+  blueprints: {args: [], cmd:'/blueprints'},
+  information: {args: [], cmd:'/information'},
+  status: {args: [], cmd:'/status'},
+  performance: {args: [], cmd:'/performance'},
+  userinfo: {args: [{id:'guid',label:'GUID'}], cmd:'/userinfo'},
+  turnpeace: {args: [], cmd:'/turnpeace'},
+  notdisturb: {args: [], cmd:'/notdisturb'},
+  block: {args: [{id:'guid',label:'GUID'}], cmd:'/block'},
+  blacklist: {args: [], cmd:'/blacklist'},
+  giftmp: {args: [{id:'guid',label:'GUID'},{id:'amount',label:'Amount'}], cmd:'/giftmp'},
+  findmatch: {args: [], cmd:'/findmatch'},
+  savepreset: {args: [{id:'name',label:'Preset name'}], cmd:'/savepreset'},
+  loadpreset: {args: [{id:'name',label:'Preset name'}], cmd:'/loadpreset'},
+  listpresets: {args: [], cmd:'/listpresets'},
+  deletepreset: {args: [{id:'name',label:'Preset name'}], cmd:'/deletepreset'},
+  dismissall: {args: [], cmd:'/dismissall'},
+  pausematch: {args: [], cmd:'/pausematch'},
+  unpausematch: {args: [], cmd:'/unpausematch'},
+  stopmatch: {args: [], cmd:'/stopmatch'},
+  maxcommanders: {args: [], cmd:'/maxcommanders'},
+  maxscience: {args: [], cmd:'/maxscience'},
+  maxbuildings: {args: [], cmd:'/maxbuildings'},
+  setcommanderades: {args: [{id:'guid',label:'GUID'},{id:'a',label:'Attack'},{id:'d',label:'Dodge'},{id:'e',label:'Electron'},{id:'s',label:'Speed'}], cmd:'/setcommanderades'},
+  setcommandervariance: {args: [{id:'guid',label:'GUID'},{id:'v',label:'Variance'}], cmd:'/setcommandervariance'}
+};
+
+function updateCommandForm() {
+  var sel = document.getElementById('cmd-select');
+  var val = sel.value;
+  var fields = document.getElementById('cmd-fields');
+  fields.innerHTML = '';
+  if (!val || !CMD_TEMPLATES[val]) {
+    document.getElementById('cmd-preview').textContent = '/ command preview';
+    return;
+  }
+  var tpl = CMD_TEMPLATES[val];
+  tpl.args.forEach(function(a) {
+    var label = document.createElement('label');
+    label.textContent = a.label + (a.opt ? ' (optional)' : '');
+    label.style.fontSize = '11px';
+    label.style.marginBottom = '2px';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'cmd-arg-' + a.id;
+    input.placeholder = a.label;
+    input.style.marginBottom = '6px';
+    input.oninput = rebuildCommandPreview;
+    fields.appendChild(label);
+    fields.appendChild(input);
+  });
+  rebuildCommandPreview();
+}
+
+function rebuildCommandPreview() {
+  var sel = document.getElementById('cmd-select');
+  var val = sel.value;
+  if (!val || !CMD_TEMPLATES[val]) {
+    document.getElementById('cmd-preview').textContent = '/ command preview';
+    return;
+  }
+  var tpl = CMD_TEMPLATES[val];
+  var parts = [tpl.cmd];
+  tpl.args.forEach(function(a) {
+    var v = document.getElementById('cmd-arg-' + a.id);
+    if (v && v.value.trim()) parts.push(v.value.trim());
+  });
+  document.getElementById('cmd-preview').textContent = parts.join(' ');
+}
+
+function copyCommand() {
+  var text = document.getElementById('cmd-preview').textContent;
+  if (!text || text == '/ command preview') { toast('Select a command and fill fields first', 'error'); return; }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      toast('Command copied!', 'success');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Command copied!', 'success');
+  }
+}
+
+function executeCommand() {
+  var text = document.getElementById('cmd-preview').textContent;
+  if (!text || text == '/ command preview') { toast('Select a command and fill fields first', 'error'); return; }
+
+  var authToken = document.getElementById('cmd-auth-token').value.trim();
+  if (!authToken) { toast('Enter auth token from Accounts page', 'error'); return; }
+
+  var userId = parseInt(document.getElementById('cmd-user-id').value) || 1;
+  var guid = parseInt(document.getElementById('cmd-guid').value) || 1;
+
+  var btn = document.getElementById('cmd-exec-btn');
+  var resultEl = document.getElementById('cmd-result');
+  btn.disabled = true;
+  resultEl.textContent = 'Executing: ' + text + '...';
+  resultEl.style.color = '#888';
+
+  api('POST', '/api/cmd/execute', {
+    auth_token: authToken,
+    user_id: userId,
+    guid: guid,
+    command: text
+  }, null, function(data, status) {
+    btn.disabled = false;
+    resultEl.textContent = JSON.stringify(data, null, 2);
+    resultEl.style.color = status < 400 ? '#0f0' : '#f44';
+    if (data && data.success) {
+      toast('Command executed: ' + text, 'success');
+    } else {
+      toast('Command failed: ' + ((data && data.error) || 'unknown'), 'error');
+    }
+  });
+}
+
+refreshStatus();
+updateApiFields();
+updateUiForAuth();
+</script>
+</body>
+</html>

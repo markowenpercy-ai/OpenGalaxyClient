@@ -227,12 +227,10 @@ def serve_logs(filename):
         try:
             with open(fpath, "r", errors="replace") as f:
                 data = f.read()
-            resp = Response(data, mimetype="text/plain; charset=utf-8")
-            resp.headers["Access-Control-Allow-Origin"] = "*"
-            return resp
+            return jsonify({"content": data, "status": "ok"})
         except:
-            return Response("Log file too large", status=413)
-    return jsonify({"error": "Log not found"}), 404
+            return jsonify({"error": "Log file too large", "status": "error"}), 413
+    return jsonify({"error": "Log not found", "status": "error"}), 404
 
 @app.route("/backend/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
 def proxy_backend(path):

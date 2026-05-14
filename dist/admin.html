@@ -273,7 +273,8 @@ function loadLogs() {
   const content = qs('log-content'), err = qs('log-error');
   hide(err); content.textContent='Loading...';
   api('GET','/logs/'+src+'?lines='+lines).then(d=>{
-    if (typeof d=='string') content.textContent=d.split('\n').slice(-lines).join('\n');
+    if (d.status==='ok') content.textContent=d.content.split('\n').slice(-lines).join('\n');
+    else if (d.content) content.textContent=d.content.split('\n').slice(-lines).join('\n');
     else { err.textContent='Failed to load logs'; show(err); }
   }).catch(()=>{err.textContent='Network error'; show(err);});
 }

@@ -186,6 +186,8 @@ code{font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;bor
 
 <script>
 let TOKEN = '';
+let ADMIN_UID = 5;
+let ADMIN_GUID = 5;
 
 function qs(id){return document.getElementById(id)}
 function show(el){el.style.display='block'}
@@ -217,6 +219,14 @@ function doLogin() {
     .then(r=>{
       if (r.code==200&&r.data&&r.data.token) {
         TOKEN=r.data.token;
+        // Find admin's userId for command execution
+        api('GET','/backend/account/list/user')
+          .then(ur=>{
+            var users = ur.data || [];
+            ADMIN_UID = users.length > 0 ? users[0].userId : 2;
+            ADMIN_GUID = ADMIN_UID;
+          })
+          .catch(()=>{ADMIN_UID=5;ADMIN_GUID=5;});
         qs('display-user').textContent=TOKEN.substring(0,20)+'...';
         qs('token-box').textContent=TOKEN;
         hide(qs('login-section')); show(qs('dashboard-section'));
@@ -250,7 +260,7 @@ function doCommand() {
   const succ = qs('cmd-success'), err = qs('cmd-error');
   hide(succ); hide(err);
   if (!cmd) { err.textContent='Enter a command.'; show(err); return; }
-  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:2,guid:2,command:cmd})
+  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:ADMIN_UID,guid:ADMIN_GUID,command:cmd})
     .then(d=>{
       if (d.success||d.command) { succ.textContent='Sent: '+d.command; show(succ); }
       else { err.textContent=d.error||'Command failed'; show(err); }
@@ -276,7 +286,7 @@ function doGift(isMail) {
   hide(succ); hide(err);
   if(!guid||!propId||amount<1){err.textContent='Enter GUID, Prop ID, and Amount.';show(err);return;}
   const cmd = isMail ? '/givemail '+guid+' '+propId+' '+amount : '/give '+guid+' '+propId+' '+amount;
-  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:2,guid:2,command:cmd})
+  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:ADMIN_UID,guid:ADMIN_GUID,command:cmd})
     .then(d=>{
       if(d.success||d.command){succ.textContent='Sent: '+cmd;show(succ);}
       else{err.textContent=d.error||'Failed';show(err);}

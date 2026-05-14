@@ -1,5 +1,8 @@
 import os
 import requests
+import sys
+import subprocess
+import json
 from flask import Flask, request, session, jsonify, send_from_directory, Response
 
 # Load .env file if present

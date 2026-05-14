@@ -71,11 +71,11 @@ code{font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;bor
     <h1 style="text-align:center;margin-bottom:20px">OpenGalaxy Admin</h1>
     <div class="form-group">
       <label>Username</label>
-      <input type="text" id="login-user" placeholder="admin">
+      <input type="text" id="login-user" placeholder="testplayer" value="testplayer">
     </div>
     <div class="form-group">
       <label>Password</label>
-      <input type="password" id="login-pass" placeholder="Password">
+      <input type="password" id="login-pass" placeholder="test123" value="test123">
     </div>
     <button class="btn btn-primary" id="login-btn" onclick="doLogin()" style="width:100%">Sign In</button>
     <div class="error" id="login-error"></div>
@@ -208,8 +208,8 @@ function switchTab(name) {
 }
 
 function doLogin() {
-  const user = qs('login-user').value.trim();
-  const pass = qs('login-pass').value;
+  const user = qs('login-user').value.trim() || 'testplayer';
+  const pass = qs('login-pass').value || 'test123';
   const btn = qs('login-btn'), err = qs('login-error');
   if (!user||!pass) { err.textContent='Enter username and password.'; show(err); return; }
   btn.disabled=true; btn.textContent='Signing in...'; hide(err);

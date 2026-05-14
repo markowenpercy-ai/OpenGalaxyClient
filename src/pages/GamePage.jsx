@@ -82,7 +82,6 @@ export default function GameClient({ onLogout }) {
     const params = {
       menu: 'false',
       scale: 'showAll',
-      wmode: 'window',
       allowScriptAccess: 'always',
       allowFullScreen: 'true',
     };
@@ -90,7 +89,6 @@ export default function GameClient({ onLogout }) {
     const attributes = {
       id: 'SnsScSWF',
       name: 'SnsScSWF',
-      wmode: 'window',
       allowScriptAccess: 'always',
       allowFullScreen: 'true',
     };

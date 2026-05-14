@@ -1,7 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
-        <resources path="/" gMap="asset/map/" res="asset/" client="asset/"
-                galaxyAssetPath="galaxy_asset">
+        <resources path="https://og-assets.s3.sgp.io.cloud.ovh.net/dev/" gMap="asset/map/" res="asset/" client="asset/" galaxyAssetPath="galaxy_asset">
                 <resource name="GameRes" src="GameRes.swf" type="Mc" />
                 <resource name="games_asset" src="games_asset.swf" type="Mc" />
                 <resource name="Picres" src="Picres.swf" type="Mc" />

@@ -1,9 +1,13 @@
 import os
 import requests
-import sys
-import subprocess
-import json
 from flask import Flask, request, session, jsonify, send_from_directory, Response
+
+# Load .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 app = Flask(__name__, static_folder="dist", template_folder="dist")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production"))
@@ -370,7 +374,8 @@ def play_all():
 
 @app.route("/")
 def index():
-    return send_from_directory(os.path.join(CLIENT_DIR, "dist"), "index.html")
+    # Serve the original working client from WORKING FOLDER ROCK
+    return send_from_directory(CLIENT_DIR_LOCAL, "index.html")
 
 @app.route("/assets/<path:filename>")
 def serve_assets(filename):

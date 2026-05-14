@@ -196,9 +196,9 @@ export default function Dashboard({ onLogout }) {
                     onChange={(e) => setNewPlanetGround(Number(e.target.value))}
                     className="w-full px-4 py-2 bg-space-dark border border-space-border rounded-lg text-white focus:outline-none focus:border-space-accent"
                   >
-                    <option value={1}>Desert</option>
-                    <option value={2}>Snow</option>
-                    <option value={3}>Lava</option>
+                    <option value={0}>Desert</option>
+                    <option value={1}>Snow</option>
+                    <option value={2}>Lava</option>
                   </select>
                 </div>
                 {createError && (

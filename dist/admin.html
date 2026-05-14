@@ -3,69 +3,285 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenGalaxy Server Stats</title>
+<title>OpenGalaxy Dashboard</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
-.container { max-width: 800px; width: 100%; }
-h1 { text-align: center; color: #00ff44; margin-bottom: 30px; font-size: 28px; letter-spacing: 2px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 20px; }
-.card h3 { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.card .val { color: #0f0; font-size: 22px; font-weight: bold; }
-.card .val.off { color: #f44; }
-.card.full { grid-column: 1 / -1; }
-.status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
-.status-dot.on { background: #0f0; box-shadow: 0 0 6px #0f0; }
-.status-dot.off { background: #f44; box-shadow: 0 0 6px #f44; }
-.footer { margin-top: 30px; text-align: center; color: #444; font-size: 12px; }
-@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f1117;color:#e1e4e8;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:24px 20px}
+h1{font-size:24px;color:#f0f2f5}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:16px}
+.card h2{font-size:15px;color:#f0f2f5;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #21262d}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:#8b949e;margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e1e4e8;font-size:13px}
+.form-group textarea{font-family:monospace;resize:vertical}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:#58a6ff}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-primary{background:#238636;color:#fff}
+.btn-primary:hover{background:#2ea043}
+.btn-danger{background:#da3633;color:#fff}
+.btn-danger:hover{background:#f85149}
+.btn-warning{background:#d29922;color:#fff}
+.btn-warning:hover{background:#e3b341}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.error{color:#f85149;font-size:12px;margin-top:6px;display:none}
+.success{color:#3fb950;font-size:12px;margin-top:6px;display:none}
+.info-text{font-size:12px;color:#8b949e;margin-top:6px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 10px;color:#8b949e;font-weight:500;border-bottom:1px solid #21262d;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #21262d}
+tr:hover td{background:#1c2128}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.badge-online{background:#238636;color:#fff}
+.badge-offline{background:#30363d;color:#8b949e}
+.badge-green{background:#238636;color:#fff}
+.badge-red{background:#da3633;color:#fff}
+
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.header .user-info{font-size:12px;color:#8b949e}
+.header .user-info strong{color:#f0f2f5}
+
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid #21262d;padding-bottom:0;flex-wrap:wrap}
+.tab{padding:8px 16px;font-size:13px;color:#8b949e;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:#f0f2f5}
+.tab.active{color:#f0f2f5;border-bottom-color:#58a6ff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:14px;text-align:center}
+.stat .value{font-size:22px;font-weight:600;color:#f0f2f5}
+.stat .label{font-size:10px;color:#8b949e;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+code{font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px}
+.empty-state{text-align:center;padding:30px;color:#8b949e;font-size:13px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #21262d}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row .toggle-label{font-size:13px}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>Server Stats</h1>
-<div class="grid" id="stats">
-<div class="card full" style="text-align:center;border-color:#00ff4433">
-<span class="status-dot" id="backend-dot"></span><span id="backend-status">Checking...</span>
-</div>
-<div class="card"><h3>Online Players</h3><div class="val" id="online">-</div></div>
-<div class="card"><h3>Game IP</h3><div class="val" id="gameip">-</div></div>
-<div class="card"><h3>Game Port</h3><div class="val">5051</div></div>
-<div class="card"><h3>Backend URL</h3><div class="val" style="font-size:14px" id="backend">-</div></div>
-<div class="card"><h3>Web Port</h3><div class="val">8080</div></div>
-<div class="card"><h3>Server Version</h3><div class="val" style="font-size:14px">v2022.2</div></div>
-<div class="card"><h3>Uptime</h3><div class="val" id="uptime">-</div></div>
-</div>
-<div class="footer">OpenGalaxy Server Stats</div>
-</div>
-<script>
-var startTime = Date.now();
 
-function refresh() {
-var xhr = new XMLHttpRequest();
-xhr.open('GET', '/api/status', true);
-xhr.onload = function() {
-  if (xhr.status == 200) {
-    var d = JSON.parse(xhr.responseText);
-    var alive = d.backendAlive;
-    document.getElementById('backend-dot').className = 'status-dot ' + (alive ? 'on' : 'off');
-    document.getElementById('backend-status').textContent = alive ? 'Online' : 'Offline';
-    document.getElementById('backend-status').style.color = alive ? '#0f0' : '#f44';
-    document.getElementById('online').textContent = d.onlinePlayers || 0;
-    document.getElementById('gameip').textContent = d.gameIp || '-';
-    document.getElementById('backend').textContent = d.backendUrl || '-';
-    var elapsed = Math.floor((Date.now() - startTime) / 1000);
-    var h = Math.floor(elapsed / 3600);
-    var m = Math.floor((elapsed % 3600) / 60);
-    var s = elapsed % 60;
-    document.getElementById('uptime').textContent = h + 'h ' + m + 'm ' + s + 's';
-  }
-};
-xhr.send();
+<div class="container" id="login-section">
+  <div class="card" style="max-width:380px;margin:100px auto 0;padding:28px">
+    <h1 style="text-align:center;margin-bottom:20px">OpenGalaxy Admin</h1>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Password">
+    </div>
+    <button class="btn btn-primary" id="login-btn" onclick="doLogin()" style="width:100%">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div class="container" id="dashboard-section" style="display:none">
+  <div class="header">
+    <div>
+      <h1>OpenGalaxy Dashboard</h1>
+      <div class="user-info">Token: <strong id="display-user"></strong></div>
+    </div>
+    <button class="btn btn-sm btn-danger" onclick="doLogout()">Sign Out</button>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" onclick="switchTab('commands')">Commands</div>
+    <div class="tab" onclick="switchTab('logs')">Logs</div>
+    <div class="tab" onclick="switchTab('gift')">Gift</div>
+  </div>
+
+  <div class="tab-content active" id="tab-overview">
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat"><div class="value" id="stat-online">-</div><div class="label">Online</div></div>
+      <div class="stat"><div class="value" id="stat-backend">-</div><div class="label">Backend</div></div>
+      <div class="stat"><div class="value" id="stat-gameip">-</div><div class="label">Game IP</div></div>
+      <div class="stat"><div class="value" id="stat-uptime">-</div><div class="label">Uptime</div></div>
+      <div class="stat"><div class="value" id="stat-cdn">-</div><div class="label">CDN</div></div>
+      <div class="stat"><div class="value" id="stat-users">-</div><div class="label">Planets</div></div>
+    </div>
+    <div class="card">
+      <h2>Session Token</h2>
+      <div style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#8b949e;word-break:break-all" id="token-box"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-commands">
+    <div class="card">
+      <h2>Execute Server Command</h2>
+      <p style="font-size:12px;color:#8b949e;margin-bottom:10px;line-height:1.5">
+        <code>/give &lt;guid&gt; &lt;propId&gt; &lt;amount&gt;</code> — Give item<br>
+        <code>/givemail &lt;guid&gt; &lt;propId&gt; &lt;amount&gt;</code> — Send via mail<br>
+        <code>/resources &lt;guid&gt;</code> — Set to 900M resources
+      </p>
+      <div class="form-group">
+        <label>Command</label>
+        <input type="text" id="cmd-input" placeholder="/give 2 2448 1" onkeydown="if(event.key==='Enter')doCommand()">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="doCommand()">Execute</button>
+      <div class="success" id="cmd-success"></div>
+      <div class="error" id="cmd-error"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-logs">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="border:none;margin:0;padding:0">Server Logs</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="log-source" style="padding:4px 8px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#e1e4e8;font-size:12px">
+            <option value="backend.log">Backend</option>
+            <option value="flask.log">Flask</option>
+            <option value="gameproxy.log">Game Proxy</option>
+            <option value="browser.log">Browser</option>
+            <option value="mongod.log">MongoDB</option>
+          </select>
+          <select id="log-lines" style="padding:4px 8px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#e1e4e8;font-size:12px">
+            <option value="50">50</option><option value="100" selected>100</option><option value="200">200</option>
+          </select>
+          <button class="btn btn-sm btn-primary" onclick="loadLogs()">Refresh</button>
+        </div>
+      </div>
+      <div id="log-content" style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b949e;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-all">Select a log source and click Refresh</div>
+      <div class="error" id="log-error"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-gift">
+    <div class="card">
+      <h2>Send Command Item</h2>
+      <div style="font-size:12px;color:#8b949e;margin-bottom:10px">
+        Use the <strong>Commands</strong> tab to run <code>/give</code> or <code>/givemail</code> with any prop ID.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prop ID</label>
+          <input type="number" id="gift-propid" placeholder="e.g. 2448" value="2448">
+        </div>
+        <div class="form-group" style="max-width:100px">
+          <label>Amount</label>
+          <input type="number" id="gift-amount" value="1" min="1" max="9999">
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Recipient GUID</label>
+          <input type="number" id="gift-guid" placeholder="2" value="2">
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:12px;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="doGift(false)">Give</button>
+          <button class="btn btn-warning btn-sm" onclick="doGift(true)">Mail</button>
+        </div>
+      </div>
+      <div class="success" id="gift-success"></div>
+      <div class="error" id="gift-error"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let TOKEN = '';
+
+function qs(id){return document.getElementById(id)}
+function show(el){el.style.display='block'}
+function hide(el){el.style.display='none'}
+
+async function api(method, url, body) {
+  const headers = {'Content-Type':'application/json'};
+  if (TOKEN) headers['Authorization'] = TOKEN;
+  const opts = {method, headers};
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  return res.json();
 }
-refresh();
-setInterval(refresh, 5000);
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.tab[onclick*="'${name}'"]`).classList.add('active');
+  qs('tab-'+name).classList.add('active');
+}
+
+function doLogin() {
+  const user = qs('login-user').value.trim();
+  const pass = qs('login-pass').value;
+  const btn = qs('login-btn'), err = qs('login-error');
+  if (!user||!pass) { err.textContent='Enter username and password.'; show(err); return; }
+  btn.disabled=true; btn.textContent='Signing in...'; hide(err);
+  api('POST','/backend/login/login/account',{username:user,password:pass})
+    .then(r=>{
+      if (r.code==200&&r.data&&r.data.token) {
+        TOKEN=r.data.token;
+        qs('display-user').textContent=TOKEN.substring(0,20)+'...';
+        qs('token-box').textContent=TOKEN;
+        hide(qs('login-section')); show(qs('dashboard-section'));
+        btn.disabled=false; btn.textContent='Sign In';
+        loadStats();
+        setInterval(loadStats,10000);
+      } else {
+        err.textContent=r.message||'Login failed'; show(err);
+        btn.disabled=false; btn.textContent='Sign In';
+      }
+    }).catch(e=>{err.textContent='Connection failed'; show(err);btn.disabled=false;btn.textContent='Sign In';});
+}
+
+function doLogout(){TOKEN='';hide(qs('dashboard-section'));show(qs('login-section'));}
+
+function loadStats() {
+  api('GET','/api/status').then(d=>{
+    qs('stat-online').textContent=d.onlinePlayers||0;
+    qs('stat-backend').textContent=d.backendAlive?'Online':'Offline';
+    qs('stat-backend').style.color=d.backendAlive?'#3fb950':'#f85149';
+    qs('stat-gameip').textContent=d.gameIp||'-';
+    qs('stat-cdn').textContent=d.cdnUrl||'local';
+    qs('stat-users').textContent=(d.users||[]).length;
+    const uptime = document.getElementById('stat-uptime');
+    if (d.uptime) uptime.textContent = d.uptime;
+  }).catch(()=>{});
+}
+
+function doCommand() {
+  const cmd = qs('cmd-input').value.trim();
+  const succ = qs('cmd-success'), err = qs('cmd-error');
+  hide(succ); hide(err);
+  if (!cmd) { err.textContent='Enter a command.'; show(err); return; }
+  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:2,guid:2,command:cmd})
+    .then(d=>{
+      if (d.success||d.command) { succ.textContent='Sent: '+d.command; show(succ); }
+      else { err.textContent=d.error||'Command failed'; show(err); }
+    }).catch(()=>{err.textContent='Network error'; show(err);});
+}
+
+function loadLogs() {
+  const src = qs('log-source').value;
+  const lines = parseInt(qs('log-lines').value)||100;
+  const content = qs('log-content'), err = qs('log-error');
+  hide(err); content.textContent='Loading...';
+  api('GET','/logs/'+src+'?lines='+lines).then(d=>{
+    if (typeof d=='string') content.textContent=d.split('\n').slice(-lines).join('\n');
+    else { err.textContent='Failed to load logs'; show(err); }
+  }).catch(()=>{err.textContent='Network error'; show(err);});
+}
+
+function doGift(isMail) {
+  const propId = parseInt(qs('gift-propid').value);
+  const amount = parseInt(qs('gift-amount').value);
+  const guid = parseInt(qs('gift-guid').value);
+  const succ = qs('gift-success'), err = qs('gift-error');
+  hide(succ); hide(err);
+  if(!guid||!propId||amount<1){err.textContent='Enter GUID, Prop ID, and Amount.';show(err);return;}
+  const cmd = isMail ? '/givemail '+guid+' '+propId+' '+amount : '/give '+guid+' '+propId+' '+amount;
+  api('POST','/api/cmd/execute',{auth_token:TOKEN,user_id:2,guid:2,command:cmd})
+    .then(d=>{
+      if(d.success||d.command){succ.textContent='Sent: '+cmd;show(succ);}
+      else{err.textContent=d.error||'Failed';show(err);}
+    }).catch(()=>{err.textContent='Network error';show(err);});
+}
 </script>
 </body>
 </html>

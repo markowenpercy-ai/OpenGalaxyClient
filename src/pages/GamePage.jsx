@@ -81,7 +81,7 @@ export default function GameClient({ onLogout }) {
 
     const params = {
       menu: 'false',
-      scale: 'noScale',
+      scale: 'showAll',
       wmode: 'window',
       allowScriptAccess: 'always',
       allowFullScreen: 'true',
@@ -157,7 +157,7 @@ export default function GameClient({ onLogout }) {
   }
 
   return (
-    <div ref={containerRef} className="h-screen flex flex-col bg-gradient-to-b from-space-dark to-black">
+    <div ref={containerRef} className="h-screen flex flex-col overflow-hidden bg-gradient-to-b from-space-dark to-black">
       <div className="flex items-center justify-between px-6 py-3 bg-space-panel/90 backdrop-blur-sm border-b border-space-border shadow-lg">
         <div className="flex items-center gap-4">
           <button

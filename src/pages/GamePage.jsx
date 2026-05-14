@@ -71,7 +71,7 @@ export default function GameClient({ onLogout }) {
       SessionSecret: sessionKey,
       Language: '1',
       IsFan: '',
-      ServerPort: 5050,
+      ServerPort: 5051,
       GameUrl: 'http://go2.igg.com',
       ForJS: '1',
       platform: '1',
